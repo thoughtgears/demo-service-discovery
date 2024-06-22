@@ -1,0 +1,12 @@
+.idea
+.env*
+
+**/.terraform
+**/.terraform.d
+**/.terraformrc
+**/terraform.tfstate
+**/terraform.tfstate.backup
+**/terraform.tfvars
+**/*.lock.hcl
+**/tf.plan
+.run

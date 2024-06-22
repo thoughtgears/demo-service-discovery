@@ -1,0 +1,41 @@
+services:
+  api:
+    image: golang:1.22-alpine
+    environment:
+      FUNCTION_TARGET: app
+    links:
+      - discovery
+    volumes:
+      - ./functions/item-api:/go/src/github.com/thoughtgears/demo-service-discovery/functions/item-api
+    working_dir: /go/src/github.com/thoughtgears/demo-service-discovery/functions/item-api
+    command: ['go', 'run', 'cmd/main.go']
+
+  frontend:
+    image: golang:1.22-alpine
+    environment:
+      DISCOVERY_URL: http://discovery:8080
+      ENVIRONMENT: dev
+      FUNCTION_TARGET: app
+    links:
+      - api:item-api
+      - discovery
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./functions/item-frontend:/go/src/github.com/thoughtgears/demo-service-discovery/functions/item-frontend
+    working_dir: /go/src/github.com/thoughtgears/demo-service-discovery/functions/item-frontend
+    command: [ 'go', 'run', 'cmd/main.go' ]
+
+  discovery:
+    build:
+      context: ../run-service-discovery
+      dockerfile: Dockerfile
+    environment:
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID}
+      GOOGLE_APPLICATION_CREDENTIALS: /root/.config/gcloud/application_default_credentials.json
+    volumes:
+      - ~/.config/gcloud:/root/.config/gcloud
+    ports:
+      - "8081:8080"
+
+
