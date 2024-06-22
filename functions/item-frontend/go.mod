@@ -1,6 +1,6 @@
 module github.com/thoughtgears/demo-service-discovery/functions/item-frontend
 
-go 1.22
+go 1.22.4
 
 require (
 	github.com/GoogleCloudPlatform/functions-framework-go v1.8.1

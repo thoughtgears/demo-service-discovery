@@ -28,7 +28,6 @@ resource "google_artifact_registry_repository" "remote" {
   }
 }
 
-
 resource "google_cloud_run_v2_service" "service_discovery" {
   project  = var.project_id
   location = var.region

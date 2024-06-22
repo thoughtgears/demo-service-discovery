@@ -1,15 +1,16 @@
 package item_frontend
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"google.golang.org/api/idtoken"
 )
 
 type Config struct {
@@ -35,7 +36,7 @@ func init() {
 }
 
 func app(w http.ResponseWriter, r *http.Request) {
-	backendURL, err := getUrl("item-api", config.Environment)
+	backendURL, err := getUrl(r.Context(), "item-api", config.Environment)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error getting backend URL: %v", err), http.StatusInternalServerError)
 		return
@@ -49,7 +50,13 @@ func app(w http.ResponseWriter, r *http.Request) {
 		count = "10"
 	}
 
-	resp, err := http.Get(fmt.Sprintf("%s:8080/?count=%s", backendURL, count))
+	client, err := idtoken.NewClient(r.Context(), backendURL)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("idtoken.NewClient: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	resp, err := client.Get(fmt.Sprintf("%s:8080/?count=%s", backendURL, count))
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error calling backend API: %v", err), http.StatusInternalServerError)
 		return
@@ -73,9 +80,15 @@ func app(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getUrl(name, env string) (string, error) {
+func getUrl(ctx context.Context, name, env string) (string, error) {
 	url := fmt.Sprintf("%s/services/%s?environment=%s", config.DiscoveryURL, name, env)
-	req, err := http.Get(url)
+
+	client, err := idtoken.NewClient(ctx, config.DiscoveryURL)
+	if err != nil {
+		return "", fmt.Errorf("idtoken.NewClient: %w", err)
+	}
+
+	req, err := client.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("error calling discovery service: %v", err)
 	}
