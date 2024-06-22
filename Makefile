@@ -1,4 +1,9 @@
-.PHONY: infra dev-api
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
+.PHONY: infra deploy-api deploy-frontend
 
 infra:
 	@echo "Creating infra"
@@ -6,8 +11,30 @@ infra:
 	terraform -chdir=terraform plan -out=tf.plan
 	terraform -chdir=terraform apply tf.plan
 
-dev-api:
-	@echo "Starting API"
+deploy-api:
+	@echo "Deploying API"
 	cd functions/item-api && \
-	go mod tidy && \
-	FUNCTION_TARGET=app LOCAL_ONLY=true DISCOVERY_URL=http://discovery go run cmd/main.go
+	gcloud functions deploy item-api \
+	--runtime go121 \
+	--trigger-http \
+	--region=$(GCP_REGION) \
+	--project=$(GCP_PROJECT_ID) \
+	--no-allow-unauthenticated \
+	--entry-point=app \
+	--no-gen2 \
+	--ingress-settings=internal-only \
+	--service-account=cf-item-api@$(GCP_PROJECT_ID).iam.gserviceaccount.com
+
+deploy-frontend:
+	@echo "Deploying frontend"
+	cd functions/item-frontend && \
+	gcloud functions deploy item-frontend \
+	--runtime go121 \
+	--trigger-http \
+	--region=$(GCP_REGION) \
+	--project=$(GCP_PROJECT_ID) \
+	--no-allow-unauthenticated \
+	--entry-point=app \
+	--no-gen2 \
+	--set-env-vars=ENVIRONMENT=dev,DISCOVERY_URL=$(DISCOVERY_URL) \
+	--service-account=cf-item-bff@$(GCP_PROJECT_ID).iam.gserviceaccount.com
