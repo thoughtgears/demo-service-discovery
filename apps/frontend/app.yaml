@@ -6,6 +6,7 @@ service_account: changeme_email
 
 env_variables:
   DISCOVERY_URL: changeme_url
+  ENVIRONMENT: dev
 
 handlers:
   - url: /static

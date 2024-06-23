@@ -33,7 +33,9 @@ push:
 
 deploy-frontend:
 	@echo "Deploying frontend"
-	cd apps/frontend && \
- 	@sed -i 's/DISCOVERY_URL: $(ORIGINAL_DISCOVERY_URL)/DISCOVERY_URL: $(DISCOVERY_URL)/' app.yaml && \
-    @sed -i 's/service_account: $(ORIGINAL_SERVICE_ACCOUNT)/service_account: ae-frontend@$(GCP_PROJECT_ID).iam.gserviceaccount.com/' $(APP_YAML)
-#	gcloud app deploy app.yaml --quiet
+	@cd apps/frontend && \
+	sed -i '' 's|DISCOVERY_URL: $(ORIGINAL_DISCOVERY_URL)|DISCOVERY_URL: $(DISCOVERY_URL)|' app.yaml && \
+	sed -i '' 's|service_account: $(ORIGINAL_SERVICE_ACCOUNT)|service_account: ae-frontend@$(GCP_PROJECT_ID).iam.gserviceaccount.com|' app.yaml && \
+	gcloud app deploy app.yaml --quiet && \
+	sed -i '' 's|DISCOVERY_URL: $(DISCOVERY_URL)|DISCOVERY_URL: $(ORIGINAL_DISCOVERY_URL)|' app.yaml && \
+	sed -i '' 's|service_account: ae-frontend@$(GCP_PROJECT_ID).iam.gserviceaccount.com|service_account: $(ORIGINAL_SERVICE_ACCOUNT)|' app.yaml

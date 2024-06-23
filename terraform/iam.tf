@@ -43,14 +43,8 @@ resource "google_project_iam_member" "service_discovery" {
   role    = "roles/datastore.user"
 }
 
-resource "google_service_account" "frontend" {
-  project      = var.project_id
-  account_id   = "ae-frontend"
-  display_name = "[AppEngine] Frontend"
-}
-
 resource "google_project_iam_member" "frontend_run_invoker" {
   project = var.project_id
-  member  = "serviceAccount:${google_service_account.frontend.email}"
+  member  = "serviceAccount:ae-frontend@thoughtgears-showcase-17657.iam.gserviceaccount.com"
   role    = "roles/run.invoker"
 }
