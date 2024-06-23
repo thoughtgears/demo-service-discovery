@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lazy Loading with HTMX</title>
+    <link rel="stylesheet" href="/static/bootstrap.min.css">
+    <script src="/static/htmx.min.js"></script>
+    <style>
+        .item-box {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 class="mt-5">Items List</h1>
+    <form id="items-form" hx-post="/items" hx-trigger="submit" hx-swap="innerHTML" hx-target="#items-container">
+        <div class="form-group">
+            <label for="count">Number of items:</label>
+            <input type="number" class="form-control" id="count" name="count" value="10">
+        </div>
+        <button type="submit" class="btn btn-primary">Load Items</button>
+    </form>
+    <div id="items-container">
+        <!-- Items will be loaded here -->
+    </div>
+</div>
+</body>
+</html>

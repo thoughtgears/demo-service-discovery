@@ -10,3 +10,4 @@
 **/*.lock.hcl
 **/tf.plan
 .run
+**/.DS_Store
