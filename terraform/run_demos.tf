@@ -1,5 +1,5 @@
 locals {
-  git_sha = "6ecd23a"
+  git_sha = "37102ee"
 }
 
 resource "google_cloud_run_v2_service" "item_api" {
