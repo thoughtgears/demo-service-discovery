@@ -3,18 +3,25 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
 	"github.com/thoughtgears/demo-service-discovery/apps/frontend/run_request"
 
+	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
 	"google.golang.org/appengine"
 )
+
+type PageData struct {
+	Items []Item
+}
+
+var decoder = schema.NewDecoder()
 
 type Item struct {
 	ID       string `json:"id"`
@@ -31,28 +38,23 @@ func init() {
 }
 
 func main() {
-	http.HandleFunc("/", handleIndex)
-	http.HandleFunc("/items", handleItems)
-
-	if os.Getenv("GAE_SERVICE") == "local" {
-		// Running locally
-		port := "8080"
-		if p := os.Getenv("PORT"); p != "" {
-			port = p
-		}
-		log.Info().Msgf("Starting server on port %s", port)
-		log.Error().Err(http.ListenAndServe(":"+port, nil)).Msg("Error starting server")
-	}
+	r := mux.NewRouter()
+	r.HandleFunc("/", handleIndex).Methods("GET")
+	r.HandleFunc("/items", handleItems).Methods("POST")
+	http.Handle("/", r)
 
 	appengine.Main()
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "static/index.html")
+	tmpl := template.Must(template.ParseFiles("static/index.html"))
+	tmpl.Execute(w, nil)
 }
 
 func handleItems(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
+
+	log.Info().Msg("Fetching items from backend")
 
 	client, err := run_request.NewClient("store-bff")
 	if err != nil {
@@ -88,4 +90,7 @@ func handleItems(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+	tmpl := template.Must(template.ParseFiles("static/index.html"))
+	data := PageData{Items: responseItems}
+	tmpl.Execute(w, data)
 }

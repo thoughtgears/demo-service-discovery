@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lazy Loading with HTMX</title>
+    <title>Item List</title>
     <link rel="stylesheet" href="/static/bootstrap.min.css">
-    <script src="/static/htmx.min.js"></script>
     <style>
         .item-box {
             border: 1px solid #ddd;
@@ -18,15 +17,23 @@
 <body>
 <div class="container">
     <h1 class="mt-5">Items List</h1>
-    <form id="items-form" hx-post="/items" hx-trigger="submit" hx-swap="innerHTML" hx-target="#items-container">
+    <form action="/items" method="post">
         <div class="form-group">
             <label for="count">Number of items:</label>
             <input type="number" class="form-control" id="count" name="count" value="10">
         </div>
         <button type="submit" class="btn btn-primary">Load Items</button>
     </form>
-    <div id="items-container">
-        <!-- Items will be loaded here -->
+    <div class="row mt-5">
+        {{range .Items}}
+        <div class="col-md-4">
+            <div class="item-box">
+                <h5>{{.Name}}</h5>
+                <p>Type: {{.Type}}</p>
+                <p>Price: {{.Currency}} {{.Price}}</p>
+            </div>
+        </div>
+        {{end}}
     </div>
 </div>
 </body>

@@ -1,0 +1,11 @@
+.gitignore
+.github
+.run
+apps
+terraform
+.dockerignore
+Dockerfile.frontend
+.env
+docker-compose.yml
+Makefile
+.DS_Store

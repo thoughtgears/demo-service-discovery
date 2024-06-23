@@ -1,0 +1,18 @@
+FROM golang:1.22-bookworm
+
+WORKDIR /root
+
+RUN ln -s /usr/bin/python3 /usr/local/bin/python
+
+# Install go to build the app for the dev_appserver script
+RUN curl https://sdk.cloud.google.com > install.sh && \
+    bash install.sh --disable-prompts --install-dir=/usr/local/lib/ && \
+    /usr/local/lib/google-cloud-sdk/bin/gcloud components install app-engine-python app-engine-go --quiet
+
+WORKDIR /app
+
+# Expose app and admin UI ports
+EXPOSE 8080
+EXPOSE 8000
+ENTRYPOINT [ "python", "/usr/local/lib/google-cloud-sdk/bin/dev_appserver.py" ]
+

@@ -3,6 +3,8 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 GIT_SHA := $(shell git rev-parse --short HEAD)
+ORIGINAL_DISCOVERY_URL=changeme_url
+ORIGINAL_SERVICE_ACCOUNT=changeme_email
 
 .PHONY: all infra build push deploy-api deploy-frontend
 
@@ -28,3 +30,10 @@ push:
 	docker push $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/demos/item-api:$(GIT_SHA)
 	docker push $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/demos/store-bff:latest
 	docker push $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/demos/store-bff:$(GIT_SHA)
+
+deploy-frontend:
+	@echo "Deploying frontend"
+	cd apps/frontend && \
+ 	@sed -i 's/DISCOVERY_URL: $(ORIGINAL_DISCOVERY_URL)/DISCOVERY_URL: $(DISCOVERY_URL)/' app.yaml && \
+    @sed -i 's/service_account: $(ORIGINAL_SERVICE_ACCOUNT)/service_account: ae-frontend@$(GCP_PROJECT_ID).iam.gserviceaccount.com/' $(APP_YAML)
+#	gcloud app deploy app.yaml --quiet

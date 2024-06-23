@@ -3,11 +3,13 @@ package run_request
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
-	"slices"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"google.golang.org/api/idtoken"
 )
@@ -31,12 +33,14 @@ func NewClient(service string) (*Client, error) {
 	}
 
 	environment := os.Getenv("ENVIRONMENT")
-	if environment == "" || slices.Contains([]string{"dev", "staging", "prod"}, environment) {
-		return nil, fmt.Errorf("ENVIRONMENT not set, or invalid value: %s", environment)
+	if environment == "" {
+		return nil, errors.New("ENVIRONMENT not set")
 	}
 
 	client.BackendURL = os.Getenv("BACKEND_URL")
 	gaeService := os.Getenv("GAE_SERVICE")
+
+	log.Info().Msgf("service: %s, discoveryURL: %s, environment: %s, backendURL: %s, gaeService: %s", service, discoveryURL, environment, client.BackendURL, gaeService)
 
 	if client.BackendURL == "" {
 		if requiresToken(gaeService) {
@@ -91,7 +95,7 @@ func NewClient(service string) (*Client, error) {
 }
 
 func requiresToken(service string) bool {
-	return service != "local"
+	return service != ""
 }
 
 func getToken(audience string) (string, error) {

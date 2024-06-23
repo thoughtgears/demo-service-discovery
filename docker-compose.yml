@@ -21,6 +21,26 @@ services:
     ports:
       - "8080:8080"
 
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    environment:
+      DISCOVERY_URL: http://discovery:8080
+      BACKEND_URL: http://bff:8080
+      GOOGLE_APPLICATION_CREDENTIALS: /root/.config/gcloud/application_default_credentials.json
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID}
+    links:
+      - discovery
+      - bff
+    ports:
+      - "8083:8080"
+      - "8000:8000"
+    command: [ "--host=0.0.0.0", "--admin_host=0.0.0.0", "--enable_host_checking=False", "app.dev.yaml" ]
+    volumes:
+      - ./apps/frontend:/app
+      -  ~/.config/gcloud:/root/.config/gcloud
+
   discovery:
     build:
       context: ../run-service-discovery
