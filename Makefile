@@ -2,8 +2,9 @@ ifneq (,$(wildcard ./.env))
     include .env
     export
 endif
+GIT_SHA := $(shell git rev-parse --short HEAD)
 
-.PHONY: infra deploy-api deploy-frontend
+.PHONY: all infra build push deploy-api deploy-frontend
 
 infra:
 	@echo "Creating infra"
@@ -11,30 +12,19 @@ infra:
 	terraform -chdir=terraform plan -out=tf.plan
 	terraform -chdir=terraform apply tf.plan
 
-deploy-api:
-	@echo "Deploying API"
-	cd functions/item-api && \
-	gcloud functions deploy item-api \
-	--runtime go121 \
-	--trigger-http \
-	--region=$(GCP_REGION) \
-	--project=$(GCP_PROJECT_ID) \
-	--no-allow-unauthenticated \
-	--entry-point=app \
-	--no-gen2 \
-	--ingress-settings=internal-only \
-	--service-account=cf-item-api@$(GCP_PROJECT_ID).iam.gserviceaccount.com
+build:
+	docker build --platform=linux \
+				-t $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/demos/item-api:latest \
+ 				-t $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/demos/item-api:$(GIT_SHA) \
+ 				-f apps/items-api/Dockerfile ./apps/items-api
 
-deploy-frontend:
-	@echo "Deploying frontend"
-	cd functions/item-frontend && \
-	gcloud functions deploy item-frontend \
-	--runtime go121 \
-	--trigger-http \
-	--region=$(GCP_REGION) \
-	--project=$(GCP_PROJECT_ID) \
-	--no-allow-unauthenticated \
-	--entry-point=app \
-	--no-gen2 \
-	--set-env-vars=ENVIRONMENT=dev,DISCOVERY_URL=$(DISCOVERY_URL) \
-	--service-account=cf-item-bff@$(GCP_PROJECT_ID).iam.gserviceaccount.com
+	docker build --platform=linux \
+				-t $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/demos/store-bff:latest \
+				-t $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/demos/store-bff:$(GIT_SHA) \
+				-f apps/items-api/Dockerfile ./apps/store-bff
+
+push:
+	docker push $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/demos/item-api:latest
+	docker push $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/demos/item-api:$(GIT_SHA)
+	docker push $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/demos/store-bff:latest
+	docker push $(GCP_REGION)-docker.pkg.dev/$(GCP_PROJECT_ID)/demos/store-bff:$(GIT_SHA)

@@ -1,15 +1,3 @@
-resource "google_service_account" "service_discovery" {
-  project      = var.project_id
-  account_id   = "run-service-discovery"
-  display_name = "[Run] Service Discovery"
-}
-
-resource "google_project_iam_member" "service_discovery" {
-  project = var.project_id
-  member  = "serviceAccount:${google_service_account.service_discovery.email}"
-  role    = "roles/datastore.user"
-}
-
 resource "google_artifact_registry_repository" "remote" {
   project       = var.project_id
   location      = var.region
@@ -32,11 +20,11 @@ resource "google_cloud_run_v2_service" "service_discovery" {
   project  = var.project_id
   location = var.region
   name     = "service-discovery"
-  ingress  = "INGRESS_TRAFFIC_INTERNAL_ONLY"
+  ingress  = "INGRESS_TRAFFIC_ALL"
 
   template {
     containers {
-      image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.remote.name}/thoughtgears/service-discovery:latest"
+      image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.remote.name}/thoughtgears/service-discovery:7322fd3"
       env {
         name  = "GCP_PROJECT_ID"
         value = var.project_id

@@ -1,30 +1,25 @@
 services:
   api:
-    image: golang:1.22-alpine
-    environment:
-      FUNCTION_TARGET: app
-    links:
-      - discovery
-    volumes:
-      - ./functions/item-api:/go/src/github.com/thoughtgears/demo-service-discovery/functions/item-api
-    working_dir: /go/src/github.com/thoughtgears/demo-service-discovery/functions/item-api
-    command: ['go', 'run', 'cmd/main.go']
+    build:
+      context: ./apps/items-api
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8080"
 
-  frontend:
-    image: golang:1.22-alpine
+  bff:
+    build:
+      context: ./apps/store-bff
+      dockerfile: Dockerfile
     environment:
       DISCOVERY_URL: http://discovery:8080
       ENVIRONMENT: dev
-      FUNCTION_TARGET: app
+      BACKEND_URL: http://api:8080
+      K_SERVICE: local
     links:
-      - api:item-api
+      - api
       - discovery
     ports:
       - "8080:8080"
-    volumes:
-      - ./functions/item-frontend:/go/src/github.com/thoughtgears/demo-service-discovery/functions/item-frontend
-    working_dir: /go/src/github.com/thoughtgears/demo-service-discovery/functions/item-frontend
-    command: [ 'go', 'run', 'cmd/main.go' ]
 
   discovery:
     build:
